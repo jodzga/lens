@@ -14,11 +14,12 @@ import { isRequestError, object } from "../../../common/utils";
 import type { GetMetrics } from "../../get-metrics.injectable";
 import getMetricsInjectable from "../../get-metrics.injectable";
 import loggerInjectable from "../../../common/logger.injectable";
+import type { Logger } from "../../../common/logger";
 
 // This is used for backoff retry tracking.
 const ATTEMPTS = [false, false, false, false, true];
 
-const loadMetricsFor = (getMetrics: GetMetrics) => async (promQueries: string[], cluster: Cluster, prometheusPath: string, queryParams: Partial<Record<string, string>>): Promise<any[]> => {
+const loadMetricsFor = (getMetrics: GetMetrics, logger: Logger) => async (promQueries: string[], cluster: Cluster, prometheusPath: string, queryParams: Partial<Record<string, string>>): Promise<any[]> => {
   const queries = promQueries.map(p => p.trim());
   const loaders = new Map<string, Promise<any>>();
 
@@ -26,6 +27,7 @@ const loadMetricsFor = (getMetrics: GetMetrics) => async (promQueries: string[],
     async function loadMetricHelper(): Promise<any> {
       for (const [attempt, lastAttempt] of ATTEMPTS.entries()) { // retry
         try {
+          logger.debug(`[METRICS]: loading metric for query: ${query}, params: ${queryParams}, prometheusPath: ${prometheusPath}`)
           return await getMetrics(cluster, prometheusPath, { query, ...queryParams });
         } catch (error) {
           if (
@@ -57,8 +59,8 @@ const addMetricsRouteInjectable = getRouteInjectable({
 
   instantiate: (di) => {
     const getMetrics = di.inject(getMetricsInjectable);
-    const loadMetrics = loadMetricsFor(getMetrics);
     const logger = di.inject(loggerInjectable);
+    const loadMetrics = loadMetricsFor(getMetrics, logger);
 
     return clusterRoute({
       method: "post",

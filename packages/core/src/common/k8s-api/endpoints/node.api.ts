@@ -205,6 +205,11 @@ export class Node extends KubeObject<
       roleLabels.push(labels["node.kubernetes.io/role"]);
     }
 
+    // DB: recognize master nodes by ulsing node pool name
+    if (typeof labels["pool"] === "string") {
+      roleLabels.push(labels["pool"]);
+    }
+
     return roleLabels;
   }
 
