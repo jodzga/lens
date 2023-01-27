@@ -15,7 +15,7 @@ const daemonSetMetricsInjectable = getInjectable({
 
     return asyncComputed({
       getValueFromObservedPromise: () => {
-        now(60 * 1000); // update every minute
+        now(2 * 60 * 1000); // update every 2 minutes
 
         return requestPodMetricsForDaemonSets([daemonSet], daemonSet.getNs());
       },

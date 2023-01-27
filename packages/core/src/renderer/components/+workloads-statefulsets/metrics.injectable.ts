@@ -15,7 +15,7 @@ const statefulSetMetricsInjectable = getInjectable({
 
     return asyncComputed({
       getValueFromObservedPromise: async () => {
-        now(60 * 1000);
+        now(2 * 60 * 1000);
 
         return requestPodMetricsForStatefulSets([statefulSet], statefulSet.getNs());
       },

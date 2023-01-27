@@ -42,8 +42,8 @@ const loadMetricsFor = (getMetrics: GetMetrics, logger: Logger) => async (promQu
           ) {
             throw new Error("Metrics not available", { cause: error });
           }
-
-          await new Promise(resolve => setTimeout(resolve, (attempt + 1) * 1000)); // add delay before repeating request
+          // DB: Increased backoff delay to 5 seconds to avoid overloading prometheus
+          await new Promise(resolve => setTimeout(resolve, (attempt + 1) * 5000)); // add delay before repeating request
         }
       }
     }

@@ -50,7 +50,8 @@ class NonInjectedPodDetailsList extends React.Component<PodDetailsListProps & De
     autoBind(this);
   }
 
-  private metricsWatcher = interval(120, () => {
+  // DB: reload metrics every 5 minutes to avoid overloading Prometheus
+  private metricsWatcher = interval(300, () => {
     this.props.podStore.loadKubeMetrics(this.props.owner.getNs());
   });
 

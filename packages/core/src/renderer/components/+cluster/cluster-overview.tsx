@@ -41,7 +41,8 @@ interface Dependencies {
 
 @observer
 class NonInjectedClusterOverview extends React.Component<Dependencies> {
-  private metricPoller = interval(60, () => this.loadMetrics());
+  // DB: reload cluster metrics every 5 minutes to avoid overloading Prometheus
+  private metricPoller = interval(5 * 60, () => this.loadMetrics());
 
   loadMetrics() {
     if (this.props.hostedCluster.available) {

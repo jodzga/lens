@@ -15,7 +15,7 @@ const namespaceMetricsInjectable = getInjectable({
 
     return asyncComputed({
       getValueFromObservedPromise: async () => {
-        now(60 * 1000); // Update every minute
+        now(2 * 60 * 1000); // Update every 2 minutes
 
         return requestPodMetricsInNamespace(namespace.getName());
       },

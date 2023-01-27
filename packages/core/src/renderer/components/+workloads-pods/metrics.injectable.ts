@@ -15,7 +15,7 @@ const podMetricsInjectable = getInjectable({
 
     return asyncComputed({
       getValueFromObservedPromise: () => {
-        now(60 * 1000);
+        now(2 * 60 * 1000);
 
         return requestPodMetrics([pod], pod.getNs());
       },

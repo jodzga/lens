@@ -60,7 +60,8 @@ interface Dependencies {
 class NonInjectedNodesRoute extends React.Component<Dependencies> {
   @observable metrics: NodeMetricData | null = null;
 
-  private metricsWatcher = interval(30, async () => this.metrics = await this.props.requestAllNodeMetrics());
+  // DB: reload all nodes metrics every 5 minutes to avoid overloading Prometheus
+  private metricsWatcher = interval(300, async () => this.metrics = await this.props.requestAllNodeMetrics());
 
   constructor(props: Dependencies) {
     super(props);

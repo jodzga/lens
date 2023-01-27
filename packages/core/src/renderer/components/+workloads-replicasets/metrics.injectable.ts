@@ -15,7 +15,7 @@ const replicaSetMetricsInjectable = getInjectable({
 
     return asyncComputed({
       getValueFromObservedPromise: async () => {
-        now(60 * 1000); // update every minute
+        now(2 * 60 * 1000); // update every 2 minutes
 
         return requestPodMetricsForReplicaSets([replicaSet], replicaSet.getNs());
       },

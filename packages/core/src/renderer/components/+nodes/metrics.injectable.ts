@@ -15,7 +15,7 @@ const nodeMetricsInjectable = getInjectable({
 
     return asyncComputed({
       getValueFromObservedPromise: () => {
-        now(60 * 1000);
+        now(2 * 60 * 1000);
 
         return requestClusterMetricsByNodeNames([node.getName()]);
       },
