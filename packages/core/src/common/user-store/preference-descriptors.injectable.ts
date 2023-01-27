@@ -22,7 +22,8 @@ const userStorePreferenceDescriptorsInjectable = getInjectable({
     const joinPaths = di.inject(joinPathsInjectable);
     const homeDirectoryPath = di.inject(homeDirectoryPathInjectable);
 
-    const mainKubeFolderPath = joinPaths(homeDirectoryPath, ".kube");
+    // DB: Modified to only watch config file to avoid loading all kinds of files at startup e.g. *.bak files
+    const mainKubeFolderPath = joinPaths(homeDirectoryPath, ".kube", "config");
 
     return ({
       httpsProxy: getPreferenceDescriptor<string | undefined>({
