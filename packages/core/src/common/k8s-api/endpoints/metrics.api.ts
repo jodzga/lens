@@ -29,7 +29,8 @@ export interface MetricResult {
   values: [number, string][];
 }
 
-export function normalizeMetrics(metrics: MetricData | undefined | null, frames = 60): MetricData {
+// DB: Increased the number of frames to 6 * 60 (6 hours) to match the default range
+export function normalizeMetrics(metrics: MetricData | undefined | null, frames = 6 * 60): MetricData {
   if (!metrics?.data?.result) {
     return {
       data: {
@@ -50,25 +51,13 @@ export function normalizeMetrics(metrics: MetricData | undefined | null, frames 
       // fill the gaps
       result.forEach(res => {
         if (!res.values || !res.values.length) return;
-
-        let now = moment().startOf("minute").subtract(1, "minute").unix();
-        let timestamp = res.values[0][0];
-
-        while (timestamp <= now) {
-          timestamp = moment.unix(timestamp).add(1, "minute").unix();
-
-          if (!res.values.find((value) => value[0] === timestamp)) {
-            res.values.push([timestamp, "0"]);
-          }
-        }
-
+        // DB: Removed filling up not-yet-existing metric values with 0s because it causes pie charts to show no current usage and ugly blanks in timeline charts
         while (res.values.length < frames) {
           const timestamp = moment.unix(res.values[0][0]).subtract(1, "minute").unix();
 
           if (!res.values.find((value) => value[0] === timestamp)) {
             res.values.unshift([timestamp, "0"]);
           }
-          now = timestamp;
         }
       });
     }

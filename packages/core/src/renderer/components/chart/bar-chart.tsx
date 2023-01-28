@@ -36,7 +36,7 @@ const NonInjectedBarChart = observer(({
   name,
   data,
   className,
-  timeLabelStep = 10,
+  timeLabelStep = 60,
   plugins,
   options: customOptions,
   ...settings

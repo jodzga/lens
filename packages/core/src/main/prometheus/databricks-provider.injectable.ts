@@ -30,7 +30,6 @@ export const getDatabricksLikeQueryFor = ({ rateAccuracy }: { rateAccuracy: stri
     const replaceGroupingLabel = (metric: string, oldLabel: string, newLabel: string) => {
       return 'sum(label_replace(' + metric + ', "' + newLabel + '", "$1", "' + oldLabel + '", "(.+)")) by (' + newLabel + ')';
     };
-    //debugger;
     switch(opts.category) {
       case "cluster":
         switch (queryName) {
