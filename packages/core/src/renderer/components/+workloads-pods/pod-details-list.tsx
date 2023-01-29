@@ -88,7 +88,7 @@ class NonInjectedPodDetailsList extends React.Component<PodDetailsListProps & De
       <LineProgress
         max={maxCpu}
         value={usage}
-        tooltip={parseFloat(value) !== 0 ? tooltip : null}
+        tooltip={tooltip}
       />
     );
   }

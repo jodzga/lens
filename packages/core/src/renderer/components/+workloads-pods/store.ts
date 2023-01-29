@@ -60,7 +60,6 @@ export class PodStore extends KubeObjectStore<Pod, PodApi> {
   }
 
   getPodKubeMetrics(pod: Pod) {
-    const containers = pod.getContainers();
     const empty = { cpu: 0, memory: 0 };
     const metrics = this.kubeMetrics.find(metric => {
       return [
@@ -71,8 +70,8 @@ export class PodStore extends KubeObjectStore<Pod, PodApi> {
 
     if (!metrics) return empty;
 
-    return containers.reduce((total, container) => {
-      const metric = metrics.containers.find(item => item.name == container.name);
+    // DB: we don't try to match container names in pods with container names in metrics because metrics return one aggregate with an empty container name
+    return metrics.containers.reduce((total, metric) => {
       let cpu = "0";
       let memory = "0";
 
