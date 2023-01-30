@@ -76,11 +76,19 @@ export class ClusterStore extends BaseStore<ClusterStoreModel> {
 
   @action
   protected fromStore({ clusters = [] }: ClusterStoreModel = {}) {
+
+    let lensContext = process.env.LENS_CONTEXT?.split(",").map((context) => context.toLowerCase());
+    
     const currentClusters = new Map(this.clusters);
     const newClusters = new Map<ClusterId, Cluster>();
 
     // update new clusters
     for (const clusterModel of clusters) {
+      // DB: Speed up startup time when there is a large number of clusters
+      // Skip contexts that are not included in lensContext
+      if (clusterModel.contextName && lensContext && !lensContext.includes(clusterModel.contextName.toLowerCase())) {
+        continue;
+      }
       try {
         let cluster = currentClusters.get(clusterModel.id);
 

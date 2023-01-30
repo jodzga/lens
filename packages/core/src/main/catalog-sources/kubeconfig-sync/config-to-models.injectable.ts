@@ -18,7 +18,16 @@ const configToModelsInjectable = getInjectable({
     return (rootConfig, filePath) => {
       const validConfigs: ReturnType<ConfigToModels> = [];
 
+      let lensContext = process.env.LENS_CONTEXT?.split(",").map((context) => context.toLowerCase());
+
       for (const { config, validationResult } of splitConfig(rootConfig)) {
+        
+        // DB: Speed up startup time when there is a large number of clusters
+        // Skip contexts that are not included in lensContext
+        if (lensContext && !lensContext.includes(config.currentContext.toLowerCase())) {
+          continue;
+        }
+
         if (validationResult.error) {
           logger.debug(`context failed validation: ${validationResult.error}`, { context: config.currentContext, filePath });
         } else {
