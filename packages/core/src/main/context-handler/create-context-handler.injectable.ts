@@ -17,7 +17,7 @@ const createContextHandlerInjectable = getInjectable({
   id: "create-context-handler",
 
   instantiate: (di) => {
-    const dependencies: Omit<ContextHandlerDependencies, "authProxyCa"> = {
+    const dependencies: Omit<ContextHandlerDependencies, "authProxyCaGetter"> = {
       createKubeAuthProxy: di.inject(createKubeAuthProxyInjectable),
       getPrometheusProviderByKind: di.inject(getPrometheusProviderByKindInjectable),
       prometheusProviders: di.inject(prometheusProvidersInjectable),
@@ -29,7 +29,11 @@ const createContextHandlerInjectable = getInjectable({
 
       return new ContextHandler({
         ...dependencies,
-        authProxyCa: di.inject(kubeAuthProxyCertificateInjectable, clusterUrl.hostname).cert,
+        // DB: Speed up app loading through lazy loading of auth proxy certs
+        authProxyCaGetter: () => {
+          let cert = di.inject(kubeAuthProxyCertificateInjectable, clusterUrl.hostname).cert
+          return cert;
+        },
       }, cluster);
     };
   },

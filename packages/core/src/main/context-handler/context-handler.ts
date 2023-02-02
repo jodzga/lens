@@ -31,7 +31,7 @@ interface PrometheusServicePreferences {
 export interface ContextHandlerDependencies {
   createKubeAuthProxy: CreateKubeAuthProxy;
   getPrometheusProviderByKind: GetPrometheusProviderByKind;
-  readonly authProxyCa: string;
+  readonly authProxyCaGetter: () => string;
   readonly prometheusProviders: IComputedValue<PrometheusProvider[]>;
   readonly logger: Logger;
 }
@@ -139,7 +139,7 @@ export class ContextHandler implements ClusterContextHandler {
   }
 
   resolveAuthProxyCa() {
-    return this.dependencies.authProxyCa;
+    return this.dependencies.authProxyCaGetter();
   }
 
   async getApiTarget(isLongRunningRequest = false): Promise<httpProxy.ServerOptions> {
