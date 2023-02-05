@@ -18,6 +18,7 @@ import type { NavigateToClusterView } from "../../../common/front-end-routing/ro
 import assert from "assert";
 import type { AttemptInstallByInfo } from "../../components/+extensions/attempt-install-by-info.injectable";
 import type { GetClusterById } from "../../../common/cluster-store/get-by-id.injectable";
+import type { GetClusterByContextName } from "../../../common/cluster-store/get-by-context-name.injectable";
 
 interface Dependencies {
   attemptInstallByInfo: AttemptInstallByInfo;
@@ -30,6 +31,7 @@ interface Dependencies {
   navigateToPreferences: (tabId: string) => void;
   entityRegistry: CatalogEntityRegistry;
   getClusterById: GetClusterById;
+  getClusterByContextName: GetClusterByContextName;
   showShortInfoNotification: ShowNotification;
 }
 
@@ -44,6 +46,7 @@ export const bindProtocolAddRouteHandlers = ({
   navigateToPreferences,
   entityRegistry,
   getClusterById,
+  getClusterByContextName,
   showShortInfoNotification,
 }: Dependencies) => () => {
   lensProtocolRouterRenderer
@@ -88,6 +91,22 @@ export const bindProtocolAddRouteHandlers = ({
           <p>
             {"Unknown catalog entity "}
             <code>{entityId}</code>
+            .
+          </p>,
+        );
+      }
+    })
+    .addInternalHandler("/context/:contextName", ({ pathname: { contextName }}) => {
+      assert(contextName);
+      const cluster = getClusterByContextName(contextName);
+
+      if (cluster) {
+        navigateToClusterView(cluster.id);
+      } else {
+        showShortInfoNotification(
+          <p>
+            {"Unknown cluster with context"}
+            <code>{contextName}</code>
             .
           </p>,
         );

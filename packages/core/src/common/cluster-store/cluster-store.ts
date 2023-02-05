@@ -51,6 +51,11 @@ export class ClusterStore extends BaseStore<ClusterStoreModel> {
     return this.clusters.size > 0;
   }
 
+  // Get cluster by contextName
+  getByContextName(contextName: string): Cluster | undefined {
+    return this.clustersList.find((cluster) => cluster.contextName === contextName);
+  }
+
   getById(id: ClusterId | undefined): Cluster | undefined {
     if (id) {
       return this.clusters.get(id);

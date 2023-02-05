@@ -16,6 +16,7 @@ import catalogEntityRegistryInjectable from "../../api/catalog/entity/registry.i
 // TODO: Importing from features is not OK. Make protocol-router to comply with Open Closed Principle to allow moving implementation under a feature
 import navigateToPreferencesInjectable from "../../../features/preferences/common/navigate-to-preferences.injectable";
 import getClusterByIdInjectable from "../../../common/cluster-store/get-by-id.injectable";
+import getClusterByContextNameInjectable from "../../../common/cluster-store/get-by-context-name.injectable";
 import showShortInfoNotificationInjectable from "../../components/notifications/show-short-info.injectable";
 
 const bindProtocolAddRouteHandlersInjectable = getInjectable({
@@ -32,6 +33,7 @@ const bindProtocolAddRouteHandlersInjectable = getInjectable({
     navigateToPreferences: di.inject(navigateToPreferencesInjectable),
     entityRegistry: di.inject(catalogEntityRegistryInjectable),
     getClusterById: di.inject(getClusterByIdInjectable),
+    getClusterByContextName: di.inject(getClusterByContextNameInjectable),
     showShortInfoNotification: di.inject(showShortInfoNotificationInjectable),
   }),
 });
