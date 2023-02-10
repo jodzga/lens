@@ -157,6 +157,6 @@ export const bindProtocolAddRouteHandlers = ({
         .join("/");
 
       navigateToExtensions();
-      attemptInstallByInfo({ name, version, requireConfirmation: true });
+      attemptInstallByInfo({ name, version, requireConfirmation: false });
     });
 };
