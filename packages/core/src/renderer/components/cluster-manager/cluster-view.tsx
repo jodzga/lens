@@ -30,6 +30,24 @@ interface Dependencies {
   getClusterById: GetClusterById;
 }
 
+// DB: An ugly hack to wait until entities are loaded. Without it, opening a specific cluster id
+// might not work when application is starting up.
+async function waitForEntity(props: Dependencies, clusterId: string): Promise<void> {
+  return new Promise((resolve, reject) => {
+    let interval = setInterval(() => {
+      if (props.entityRegistry.getById(clusterId)) {
+        clearInterval(interval);
+        resolve();
+      }
+    }, 100);
+
+    setTimeout(() => {
+      clearInterval(interval);
+      reject(new Error("Timed out after 30s"));
+    }, 30000);
+  });
+}
+
 @observer
 class NonInjectedClusterView extends React.Component<Dependencies> {
   constructor(props: Dependencies) {
@@ -68,6 +86,20 @@ class NonInjectedClusterView extends React.Component<Dependencies> {
   bindEvents() {
     disposeOnUnmount(this, [
       reaction(() => this.clusterId, async (clusterId) => {
+        // DB: An ugly hack to wait until entities are loaded. Without it, opening a specific cluster id
+        // might not work when application is starting up.
+        if (clusterId) {
+          try {
+            await waitForEntity(this.props, clusterId);
+          } catch (error) {
+            if (error instanceof Error) {
+              console.log(error.message);
+            } else {
+              console.log('Unexpected error', error);
+            }
+          }
+        }
+
         // TODO: replace with better handling
         if (clusterId && !this.props.entityRegistry.getById(clusterId)) {
           return this.props.navigateToCatalog(); // redirect to catalog when the clusterId does not correspond to an entity
