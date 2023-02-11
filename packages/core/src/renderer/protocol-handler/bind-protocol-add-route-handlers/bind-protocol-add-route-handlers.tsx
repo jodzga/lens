@@ -49,6 +49,29 @@ export const bindProtocolAddRouteHandlers = ({
   getClusterByContextName,
   showShortInfoNotification,
 }: Dependencies) => () => {
+
+  // DB: An ugly workaroung for protocol handler being called twice. Simply ignore subsequent calls within 30s time window.
+  const cache = new Map<string, number>();
+
+  function isCalledWithin30Seconds(str: string): boolean {
+    const currentTime = Date.now();
+  
+    // Remove elements from cache that are older than 30 seconds
+    cache.forEach((value, key) => {
+      if (currentTime - value >= 30 * 1000) {
+        cache.delete(key);
+      }
+    });
+  
+    // Check if the current string is in the cache
+    if (cache.has(str)) {
+      return true;
+    } else {
+      cache.set(str, currentTime);
+      return false;
+    }
+  }
+
   lensProtocolRouterRenderer
     .addInternalHandler("/preferences", ({ search: { highlight: tabId }}) => {
       if (tabId) {
@@ -157,6 +180,8 @@ export const bindProtocolAddRouteHandlers = ({
         .join("/");
 
       navigateToExtensions();
-      attemptInstallByInfo({ name, version, requireConfirmation: false });
+      if (!isCalledWithin30Seconds(name)) {
+        attemptInstallByInfo({ name, version, requireConfirmation: false });
+      }
     });
 };
