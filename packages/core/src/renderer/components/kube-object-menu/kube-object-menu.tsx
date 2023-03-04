@@ -28,6 +28,8 @@ import { Icon } from "../icon";
 import navigateInjectable from "../../navigation/navigate.injectable";
 import withConfirmationInjectable from "../confirm-dialog/with-confirm.injectable";
 import { observer } from "mobx-react";
+import type { DashboardLinksFinder } from "../../db/dashboard-links-finder.injectable";
+import dashboardLinksFinderInjectable from "../../db/dashboard-links-finder.injectable";
 
 export interface KubeObjectMenuProps<TKubeObject extends KubeObject> extends MenuActionsProps {
   object: TKubeObject;
@@ -44,6 +46,7 @@ interface Dependencies {
   onContextMenuOpen: OnKubeObjectContextMenuOpen;
   withConfirmation: WithConfirmation;
   navigate: Navigate;
+  dashboardLinksFinder: DashboardLinksFinder;
 }
 
 @observer
@@ -95,11 +98,14 @@ class NonInjectedKubeObjectMenu<Kube extends KubeObject> extends React.Component
       onContextMenuOpen,
       navigate,
       updateAction,
+      dashboardLinksFinder,
     } = this.props;
 
     const store = apiManager.getStore(object.selfLink);
     const isEditable = editable ?? (Boolean(store?.patch) || Boolean(updateAction));
     const isRemovable = removable ?? (Boolean(store?.remove) || Boolean(removeAction));
+    const hasDashboard = true;
+    const hasElkLogs = true;
 
     runInAction(() => {
       this.menuItems.clear();
@@ -139,6 +145,39 @@ class NonInjectedKubeObjectMenu<Kube extends KubeObject> extends React.Component
           },
         });
       }
+
+      if (hasDashboard) {
+        this.menuItems.push({
+          title: "Grafana Dashboard",
+          icon: "dashboard",
+          onClick: async () => {
+            const linkParams: Record<string, string | undefined> = {
+              linkType: "Grafana Dashboard",
+              kind: object.kind,
+              ns: object.getNs(),
+              name: object.getName(),
+            };
+            dashboardLinksFinder(linkParams);
+          },
+        });
+      }
+
+      if (hasElkLogs) {
+        this.menuItems.push({
+          title: "ELK Logs",
+          icon: "manage_search",
+          onClick: async () => {
+            const linkParams: Record<string, string | undefined> = {
+              linkType: "ELK Logs",
+              kind: object.kind,
+              ns: object.getNs(),
+              name: object.getName(),
+            };
+            dashboardLinksFinder(linkParams);
+          },
+        });
+      }
+
     });
 
     onContextMenuOpen(object, {
@@ -211,5 +250,6 @@ export const KubeObjectMenu = withInjectables<Dependencies, KubeObjectMenuProps<
     onContextMenuOpen: di.inject(onKubeObjectContextMenuOpenInjectable),
     navigate: di.inject(navigateInjectable),
     withConfirmation: di.inject(withConfirmationInjectable),
+    dashboardLinksFinder: di.inject(dashboardLinksFinderInjectable),
   }),
 }) as <T extends KubeObject>(props: KubeObjectMenuProps<T>) => React.ReactElement;
