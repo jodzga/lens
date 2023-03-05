@@ -57,7 +57,7 @@ export class DeploymentStore extends KubeObjectStore<Deployment, DeploymentApi> 
 
   getChildPods(deployment: Deployment) {
     return this.dependencies.podStore
-      .getByLabel(deployment.getTemplateLabels())
+      .getByAppLabel(deployment.metadata.labels?.app)
       .filter(pod => pod.getNs() === deployment.getNs());
   }
 }

@@ -41,8 +41,6 @@ export class ReplicaSetStore extends KubeObjectStore<ReplicaSet, ReplicaSetApi> 
   }
 
   getReplicaSetsByOwner(deployment: Deployment) {
-    return this.items.filter(replicaSet =>
-      !!replicaSet.getOwnerRefs().find(owner => owner.uid === deployment.getId()),
-    );
+    return this.getByOwnerRefId(deployment.getId());
   }
 }

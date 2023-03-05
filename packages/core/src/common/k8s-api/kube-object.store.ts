@@ -96,6 +96,8 @@ export abstract class KubeObjectStore<
 > extends ItemStore<K> {
   public readonly limit: number | undefined;
   public readonly bufferSize: number;
+  private appLabelMap: { [appLabelValue: string]: K[] };
+  private ownerRefMap: { [onwerRefId: string]: K[] };
 
   private readonly loadedNamespaces = observable.box<string[]>();
 
@@ -107,6 +109,8 @@ export abstract class KubeObjectStore<
     super();
     this.limit = opts?.limit;
     this.bufferSize = opts?.bufferSize ?? 50_000;
+    this.appLabelMap = {};
+    this.ownerRefMap = {};
 
     makeObservable(this);
     autoBind(this);
@@ -183,6 +187,61 @@ export abstract class KubeObjectStore<
           .every(([key, value]) => itemLabels[key] === value);
       });
     }
+  }
+
+  private addToIndices(o: K) {
+    const appLabelValue = o.metadata.labels?.app;
+    if (appLabelValue) {
+      if (!this.appLabelMap[appLabelValue]) {
+        this.appLabelMap[appLabelValue] = [];
+      }
+      this.appLabelMap[appLabelValue].push(o);
+    }
+    for (const ownerRef of o.getOwnerRefs()) {
+      const ownerRefId = ownerRef.uid;
+      if (ownerRefId) {
+        if (!this.ownerRefMap[ownerRefId]) {
+          this.ownerRefMap[ownerRefId] = [];
+        }
+        this.ownerRefMap[ownerRefId].push(o);
+      }
+    }
+  }
+
+  private removeFromIndices(o: K) {
+    const appLabelValue = o.metadata.labels?.app;
+    if (appLabelValue && this.appLabelMap[appLabelValue]) {
+      this.appLabelMap[appLabelValue] = this.appLabelMap[appLabelValue].filter(
+        (p) => p.metadata.uid !== o.metadata.uid
+      );
+    }
+    for (const ownerRef of o.getOwnerRefs()) {
+      const ownerRefId = ownerRef.uid;
+      if (ownerRefId && this.ownerRefMap[ownerRefId]) {
+        this.ownerRefMap[ownerRefId] = this.ownerRefMap[ownerRefId].filter(
+          (p) => p.metadata.uid !== o.metadata.uid
+        );
+      }
+    }
+  }
+
+  private updateInIndices(oldO: K, newO: K) {
+    this.removeFromIndices(oldO);
+    this.addToIndices(newO);
+  }
+
+  getByAppLabel(appLabel: string | undefined): K[] {
+    if (appLabel === undefined) {
+      return [];
+    }
+    return this.appLabelMap[appLabel] || [];
+  }
+
+  getByOwnerRefId(ownerRefId: string | undefined): K[] {
+    if (ownerRefId === undefined) {
+      return [];
+    }
+    return this.ownerRefMap[ownerRefId] || [];
   }
 
   protected async loadItems({ namespaces, reqInit, onLoadFailure }: KubeObjectStoreLoadingParams): Promise<K[]> {
@@ -294,6 +353,10 @@ export abstract class KubeObjectStore<
 
     if (filter) items = this.filterItemsOnLoad(items);
     if (sort) items = this.sortItems(items);
+
+    this.appLabelMap = {};
+    items.forEach(item => this.addToIndices(item));
+
     if (updateStore) this.items.replace(items);
 
     return items;
@@ -317,6 +380,7 @@ export abstract class KubeObjectStore<
       assert(item, "Failed to load item from kube");
       const newItems = this.sortItems([...this.items, item]);
 
+      this.addToIndices(item);
       this.items.replace(newItems);
     }
 
@@ -338,10 +402,11 @@ export abstract class KubeObjectStore<
 
   async create(params: { name: string; namespace?: string }, data?: PartialDeep<K>): Promise<K> {
     const newItem = await this.createItem(params, data);
-
+      
     assert(newItem, "Failed to create item from kube");
     const items = this.sortItems([...this.items, newItem]);
 
+    this.addToIndices(newItem);
     this.items.replace(items);
 
     return newItem;
@@ -351,8 +416,10 @@ export abstract class KubeObjectStore<
     const index = this.items.findIndex(item => item.getId() === newItem.getId());
 
     if (index < 0) {
+      this.addToIndices(newItem);
       this.items.push(newItem);
     } else {
+      this.updateInIndices(this.items[index], newItem)
       this.items[index] = newItem;
     }
 
@@ -515,8 +582,10 @@ export abstract class KubeObjectStore<
             const newItem = new this.api.objectConstructor(object);
 
             if (!item) {
+              this.addToIndices(newItem);
               items.push(newItem);
             } else {
+              this.updateInIndices(item, newItem)
               items[index] = newItem;
             }
 
@@ -524,6 +593,7 @@ export abstract class KubeObjectStore<
           }
           case "DELETED":
             if (item) {
+              this.removeFromIndices(item);
               items.splice(index, 1);
             }
             break;
@@ -534,6 +604,6 @@ export abstract class KubeObjectStore<
     }
 
     // update items
-    this.items.replace(this.sortItems(items.slice(-this.bufferSize)));
+    this.items.replace(this.sortItems(items));
   }
 }

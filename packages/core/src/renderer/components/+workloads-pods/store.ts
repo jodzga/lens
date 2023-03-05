@@ -37,16 +37,11 @@ export class PodStore extends KubeObjectStore<Pod, PodApi> {
   }
 
   getPodsByOwner(workload: KubeObject<NamespaceScopedMetadata, unknown, unknown>): Pod[] {
-    return this.items.filter(pod => (
-      pod.getOwnerRefs()
-        .find(owner => owner.uid === workload.getId())
-    ));
+    return this.getByOwnerRefId(workload.getId());
   }
 
   getPodsByOwnerId(workloadId: string): Pod[] {
-    return this.items.filter(pod => {
-      return pod.getOwnerRefs().find(owner => owner.uid === workloadId);
-    });
+    return this.getByOwnerRefId(workloadId);
   }
 
   getPodsByNode(node: string) {
