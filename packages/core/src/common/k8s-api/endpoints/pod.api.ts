@@ -688,10 +688,10 @@ export class Pod extends KubeObject<
   getStatus(): PodStatusPhase {
     const phase = this.getStatusPhase();
     const reason = this.getReason();
-    const trueConditionTypes = new Set(this.getConditions()
-      .filter(({ status }) => status === "True")
-      .map(({ type }) => type));
-    const isInGoodCondition = ["Initialized", "Ready"].every(condition => trueConditionTypes.has(condition));
+    // const trueConditionTypes = new Set(this.getConditions()
+    //   .filter(({ status }) => status === "True")
+    //   .map(({ type }) => type));
+    // const isInGoodCondition = ["Initialized", "Ready"].every(condition => trueConditionTypes.has(condition));
 
     if (reason === PodStatusPhase.EVICTED) {
       return PodStatusPhase.EVICTED;
@@ -705,7 +705,7 @@ export class Pod extends KubeObject<
       return PodStatusPhase.SUCCEEDED;
     }
 
-    if (phase === PodStatusPhase.RUNNING && isInGoodCondition) {
+    if (phase === PodStatusPhase.RUNNING) {
       return PodStatusPhase.RUNNING;
     }
 
